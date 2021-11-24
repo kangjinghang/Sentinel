@@ -15,26 +15,26 @@
  */
 package com.alibaba.csp.sentinel.slots.statistic.metric;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.alibaba.csp.sentinel.config.SentinelConfig;
 import com.alibaba.csp.sentinel.node.metric.MetricNode;
 import com.alibaba.csp.sentinel.slots.statistic.MetricEvent;
 import com.alibaba.csp.sentinel.slots.statistic.base.LeapArray;
-import com.alibaba.csp.sentinel.slots.statistic.data.MetricBucket;
 import com.alibaba.csp.sentinel.slots.statistic.base.WindowWrap;
+import com.alibaba.csp.sentinel.slots.statistic.data.MetricBucket;
 import com.alibaba.csp.sentinel.slots.statistic.metric.occupy.OccupiableBucketLeapArray;
 import com.alibaba.csp.sentinel.util.function.Predicate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * The basic metric class in Sentinel using a {@link BucketLeapArray} internal.
- *
+ * 一个使用数组保存数据的计量器类
  * @author jialiang.linjl
  * @author Eric Zhao
  */
 public class ArrayMetric implements Metric {
-
+    // 数据就保存在这个数据结构中
     private final LeapArray<MetricBucket> data;
 
     public ArrayMetric(int sampleCount, int intervalInMs) {
@@ -106,10 +106,10 @@ public class ArrayMetric implements Metric {
 
     @Override
     public long pass() {
-        data.currentWindow();
+        data.currentWindow(); // 更新当前样本窗口为最新的数据
         long pass = 0;
-        List<MetricBucket> list = data.values();
-
+        List<MetricBucket> list = data.values(); // 当前时间窗口中所有的样本窗口统计的value记录到pass中
+        // 将list中所有的pass维度的统计数据取出并求和
         for (MetricBucket window : list) {
             pass += window.pass();
         }
@@ -241,8 +241,8 @@ public class ArrayMetric implements Metric {
 
     @Override
     public void addPass(int count) {
-        WindowWrap<MetricBucket> wrap = data.currentWindow();
-        wrap.value().addPass(count);
+        WindowWrap<MetricBucket> wrap = data.currentWindow(); // 获取当前时间点所在的样本窗口
+        wrap.value().addPass(count); // 将当前请求的计数量添加到当前样本窗口的统计数据中
     }
 
     @Override

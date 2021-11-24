@@ -16,18 +16,17 @@
 package com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker;
 
 import com.alibaba.csp.sentinel.context.Context;
-import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
 
 /**
  * <p>Basic <a href="https://martinfowler.com/bliki/CircuitBreaker.html">circuit breaker</a> interface.</p>
- *
+ * 从1.7.2以后，将三种熔断策略（慢调用/异常比/异常数）封装为两种熔断器：响应时间熔断器和异常熔断器
  * @author Eric Zhao
  */
 public interface CircuitBreaker {
 
     /**
-     * Get the associated circuit breaking rule.
+     * Get the associated circuit breaking rule. 获取降级规则
      *
      * @return associated circuit breaking rule
      */
@@ -35,14 +34,14 @@ public interface CircuitBreaker {
 
     /**
      * Acquires permission of an invocation only if it is available at the time of invoking.
-     *
+     * 判断请求是否可以通过
      * @param context context of current invocation
-     * @return {@code true} if permission was acquired and {@code false} otherwise
+     * @return {@code true} if permission was acquired and {@code false} otherwise 返回true表示通过，不用降级，否则降级
      */
     boolean tryPass(Context context);
 
     /**
-     * Get current state of the circuit breaker.
+     * Get current state of the circuit breaker. 获取当前熔断器状态
      *
      * @return current state of the circuit breaker
      */
@@ -51,7 +50,7 @@ public interface CircuitBreaker {
     /**
      * <p>Record a completed request with the context and handle state transformation of the circuit breaker.</p>
      * <p>Called when a <strong>passed</strong> invocation finished.</p>
-     *
+     * 当请求通过并完成后触发的回调方法
      * @param context context of current invocation
      */
     void onRequestComplete(Context context);
@@ -60,11 +59,11 @@ public interface CircuitBreaker {
      * Circuit breaker state.
      */
     enum State {
-        /**
+        /** 打开状态：会拒绝所有请求
          * In {@code OPEN} state, all requests will be rejected until the next recovery time point.
          */
         OPEN,
-        /**
+        /** 半开状态：过渡状态
          * In {@code HALF_OPEN} state, the circuit breaker will allow a "probe" invocation.
          * If the invocation is abnormal according to the strategy (e.g. it's slow), the circuit breaker
          * will re-transform to the {@code OPEN} state and wait for the next recovery time point;
@@ -72,7 +71,7 @@ public interface CircuitBreaker {
          * will cease cutting off requests and transform to {@code CLOSED} state.
          */
         HALF_OPEN,
-        /**
+        /** 关闭状态：所有请求可以通过
          * In {@code CLOSED} state, all requests are permitted. When current metric value exceeds the threshold,
          * the circuit breaker will transform to {@code OPEN} state.
          */

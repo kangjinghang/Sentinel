@@ -47,7 +47,7 @@ public class FlowRule extends AbstractRule {
     }
 
     /**
-     * The threshold type of flow control (0: thread count, 1: QPS).
+     * The threshold type of flow control (0: thread count, 1: QPS). 默认的流控规则阈值类型为QPS
      */
     private int grade = RuleConstant.FLOW_GRADE_QPS;
 
@@ -58,31 +58,31 @@ public class FlowRule extends AbstractRule {
 
     /**
      * Flow control strategy based on invocation chain.
-     *
-     * {@link RuleConstant#STRATEGY_DIRECT} for direct flow control (by origin);
-     * {@link RuleConstant#STRATEGY_RELATE} for relevant flow control (with relevant resource);
-     * {@link RuleConstant#STRATEGY_CHAIN} for chain flow control (by entrance resource).
+     * 流控模式
+     * {@link RuleConstant#STRATEGY_DIRECT} for direct flow control (by origin); 直接模式
+     * {@link RuleConstant#STRATEGY_RELATE} for relevant flow control (with relevant resource); 关联模式
+     * {@link RuleConstant#STRATEGY_CHAIN} for chain flow control (by entrance resource). 链路模式
      */
     private int strategy = RuleConstant.STRATEGY_DIRECT;
 
     /**
-     * Reference resource in flow control with relevant resource or context.
+     * Reference resource in flow control with relevant resource or context. 如果为关联模式，关联的资源是谁
      */
     private String refResource;
 
     /**
-     * Rate limiter control behavior.
+     * Rate limiter control behavior. 流控效果：0. 快速失败, 1. warm up（令牌桶算法）, 2. 排队等待（漏斗算法）, 3. warm up + 排队等待
      * 0. default(reject directly), 1. warm up, 2. rate limiter, 3. warm up + rate limiter
      */
     private int controlBehavior = RuleConstant.CONTROL_BEHAVIOR_DEFAULT;
-
+    // 预热时长
     private int warmUpPeriodSec = 10;
 
     /**
-     * Max queueing time in rate limiter behavior.
+     * Max queueing time in rate limiter behavior. 排队等待模式时排队等待的超时时间（不会一直等着）
      */
     private int maxQueueingTimeMs = 500;
-
+    // 是否集群模式
     private boolean clusterMode;
     /**
      * Flow rule config for cluster mode.

@@ -17,7 +17,7 @@ package com.alibaba.csp.sentinel.slotchain;
 
 import com.alibaba.csp.sentinel.context.Context;
 
-/**
+/** 这是一个单向链表，默认包含一个节点，且有两个指针first和end同时指向这个节点
  * @author qinan.qn
  * @author jialiang.linjl
  */
@@ -50,8 +50,8 @@ public class DefaultProcessorSlotChain extends ProcessorSlotChain {
 
     @Override
     public void addLast(AbstractLinkedProcessorSlot<?> protocolProcessor) {
-        end.setNext(protocolProcessor);
-        end = protocolProcessor;
+        end.setNext(protocolProcessor); // 当前end的下一个节点指向新节点
+        end = protocolProcessor; // end指向新节点
     }
 
     /**

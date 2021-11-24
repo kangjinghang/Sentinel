@@ -21,12 +21,12 @@ import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Represents metrics data in a period of time span.
- *
+ * 统计数据的封装类
  * @author jialiang.linjl
  * @author Eric Zhao
  */
 public class MetricBucket {
-
+    // 统计的数据存放在这里，是多维度的，这些维度类型在MetricEvent枚举中
     private final LongAdder[] counters;
 
     private volatile long minRt;
@@ -59,7 +59,7 @@ public class MetricBucket {
      * @return new metric bucket in initial state
      */
     public MetricBucket reset() {
-        for (MetricEvent event : MetricEvent.values()) {
+        for (MetricEvent event : MetricEvent.values()) { // 将每个维度的统计数据清零
             counters[event.ordinal()].reset();
         }
         initMinRt();
@@ -104,7 +104,7 @@ public class MetricBucket {
     }
 
     public void addPass(int n) {
-        add(MetricEvent.PASS, n);
+        add(MetricEvent.PASS, n); // 向PASS维度中增加统计数据
     }
 
     public void addOccupiedPass(int n) {

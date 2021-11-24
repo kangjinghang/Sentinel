@@ -24,13 +24,13 @@ package com.alibaba.csp.sentinel.slots.block;
 public abstract class AbstractRule implements Rule {
 
     /**
-     * Resource name.
+     * Resource name. 资源名称
      */
     private String resource;
 
     /**
      * <p>
-     * Application name that will be limited by origin.
+     * Application name that will be limited by origin. 限制的请求来源，默认是"default"（代表允许所有来源）
      * The default limitApp is {@code default}, which means allowing all origin apps.
      * </p>
      * <p>

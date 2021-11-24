@@ -15,15 +15,15 @@
  */
 package com.alibaba.csp.sentinel.node;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.SphO;
 import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.context.Context;
+import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <p>
@@ -138,8 +138,8 @@ public class DefaultNode extends StatisticNode {
 
     @Override
     public void addPassRequest(int count) {
-        super.addPassRequest(count);
-        this.clusterNode.addPassRequest(count);
+        super.addPassRequest(count); // 增加当前入口的DefaultNode中的统计数据
+        this.clusterNode.addPassRequest(count); // 增加当前资源的ClusterNode中的全局统计数据
     }
 
     public void printDefaultNode() {

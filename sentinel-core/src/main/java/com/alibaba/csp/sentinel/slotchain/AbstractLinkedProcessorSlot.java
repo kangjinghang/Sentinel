@@ -22,13 +22,13 @@ import com.alibaba.csp.sentinel.context.Context;
  * @author jialiang.linjl
  */
 public abstract class AbstractLinkedProcessorSlot<T> implements ProcessorSlot<T> {
-
+    // 声明了指向下一个节点的指针
     private AbstractLinkedProcessorSlot<?> next = null;
 
     @Override
     public void fireEntry(Context context, ResourceWrapper resourceWrapper, Object obj, int count, boolean prioritized, Object... args)
         throws Throwable {
-        if (next != null) {
+        if (next != null) { // 切换到下一个节点
             next.transformEntry(context, resourceWrapper, obj, count, prioritized, args);
         }
     }

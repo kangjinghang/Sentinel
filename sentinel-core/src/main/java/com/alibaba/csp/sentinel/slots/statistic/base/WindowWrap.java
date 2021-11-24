@@ -16,7 +16,7 @@
 package com.alibaba.csp.sentinel.slots.statistic.base;
 
 /**
- * Wrapper entity class for a period of time window.
+ * Wrapper entity class for a period of time window. 样本窗口实例
  *
  * @param <T> data type
  * @author jialiang.linjl
@@ -25,17 +25,17 @@ package com.alibaba.csp.sentinel.slots.statistic.base;
 public class WindowWrap<T> {
 
     /**
-     * Time length of a single window bucket in milliseconds.
+     * Time length of a single window bucket in milliseconds. 样本窗口长度
      */
     private final long windowLengthInMs;
 
     /**
-     * Start timestamp of the window in milliseconds.
+     * Start timestamp of the window in milliseconds. 起始时间
      */
     private long windowStart;
 
     /**
-     * Statistic data.
+     * Statistic data. 当前样本窗口的统计数据
      */
     private T value;
 

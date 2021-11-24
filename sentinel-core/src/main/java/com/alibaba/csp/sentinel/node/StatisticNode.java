@@ -15,16 +15,16 @@
  */
 package com.alibaba.csp.sentinel.node;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.LongAdder;
-
 import com.alibaba.csp.sentinel.node.metric.MetricNode;
 import com.alibaba.csp.sentinel.slots.statistic.metric.ArrayMetric;
 import com.alibaba.csp.sentinel.slots.statistic.metric.Metric;
 import com.alibaba.csp.sentinel.util.TimeUtil;
 import com.alibaba.csp.sentinel.util.function.Predicate;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * <p>The statistic node keep three kinds of real-time statistics metrics:</p>
@@ -91,7 +91,7 @@ public class StatisticNode implements Node {
 
     /**
      * Holds statistics of the recent {@code INTERVAL} milliseconds. The {@code INTERVAL} is divided into time spans
-     * by given {@code sampleCount}.
+     * by given {@code sampleCount}. 定义了一个使用数组保存数据的计量器。SAMPLE_COUNT，样本窗口数量，默认值为2。INTERVAL时间窗口长度，默认值为1000ms
      */
     private transient volatile Metric rollingCounterInSecond = new ArrayMetric(SampleCountProperty.SAMPLE_COUNT,
         IntervalProperty.INTERVAL);
@@ -197,8 +197,8 @@ public class StatisticNode implements Node {
     }
 
     @Override
-    public double passQps() {
-        return rollingCounterInSecond.pass() / rollingCounterInSecond.getWindowIntervalInSec();
+    public double passQps() { // rollingCounterInSecond.pass() 当前时间窗口中统计的通过的请求数量；rollingCounterInSecond.getWindowIntervalInSec() 时间窗口长度
+        return rollingCounterInSecond.pass() / rollingCounterInSecond.getWindowIntervalInSec(); // 计算出的就是QPS
     }
 
     @Override
@@ -244,7 +244,7 @@ public class StatisticNode implements Node {
 
     @Override
     public void addPassRequest(int count) {
-        rollingCounterInSecond.addPass(count);
+        rollingCounterInSecond.addPass(count); // 为滑动计数器增加本次访问的数据
         rollingCounterInMinute.addPass(count);
     }
 
