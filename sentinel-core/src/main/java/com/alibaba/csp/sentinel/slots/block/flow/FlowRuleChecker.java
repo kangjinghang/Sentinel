@@ -81,10 +81,10 @@ public class FlowRuleChecker {
         if (selectedNode == null) { // 如果没有选择出node，说明没有规则，则直接返回true，表示通过检测
             return true;
         }
-        // 使用规则进行逐项检测
-        return rule.getRater().canPass(selectedNode, acquireCount, prioritized);
+        // 如果存在统计Node，使用规则进行逐项检测。根据配置FlowRule配置的controlBehavior选择不同的Controller。
+        return rule.getRater().canPass(selectedNode, acquireCount, prioritized); // default(reject directly)=DefaultController，warm up=WarmUpController，rate limiter=RateLimiterController，warm up + rate limiter=WarmUpRateLimiter
     }
-
+    // 根据调用方和上下文以及FlowRule所配置的Strategy来获取应该用于限流的统计Node
     static Node selectReferenceNode(FlowRule rule, Context context, DefaultNode node) {
         String refResource = rule.getRefResource();
         int strategy = rule.getStrategy();
@@ -113,17 +113,17 @@ public class FlowRuleChecker {
     }
 
     static Node selectNodeByRequesterAndStrategy(/*@NonNull*/ FlowRule rule, Context context, DefaultNode node) {
-        // The limit app should not be empty.
+        // The limit app should not be empty. 是否有调用方需要被限流，默认情况下limitApp为'default'
         String limitApp = rule.getLimitApp();
         int strategy = rule.getStrategy();
-        String origin = context.getOrigin();
+        String origin = context.getOrigin(); // 获得上下文的调用方
 
         if (limitApp.equals(origin) && filterOrigin(origin)) {
             if (strategy == RuleConstant.STRATEGY_DIRECT) {
                 // Matches limit origin, return origin statistic node.
                 return context.getOriginNode();
             }
-
+            // 根据调用方和上下文以及FlowRule所配置的Strategy来获取应该用于限流的统计Node
             return selectReferenceNode(rule, context, node);
         } else if (RuleConstant.LIMIT_APP_DEFAULT.equals(limitApp)) {
             if (strategy == RuleConstant.STRATEGY_DIRECT) {

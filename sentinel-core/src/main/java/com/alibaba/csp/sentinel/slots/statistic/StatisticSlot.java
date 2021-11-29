@@ -61,14 +61,14 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             // Request passed, add thread count and pass count. 代码能走到这里，说明前面的检测全部通过，此时就可以将该请求统计到相应数据中了
             node.increaseThreadNum(); // 增加线程数
             node.addPassRequest(count); // 增加通过的请求数量
-
+            // 如果在调用entry之前指定了调用的origin，即调用方，则会有一个originNode
             if (context.getCurEntry().getOriginNode() != null) {
-                // Add count for origin node.
+                // Add count for origin node. 我们也需要做上面两个增加操作，方便针对调用方的统计，为后续的限流做准备
                 context.getCurEntry().getOriginNode().increaseThreadNum();
                 context.getCurEntry().getOriginNode().addPassRequest(count);
             }
 
-            if (resourceWrapper.getEntryType() == EntryType.IN) {
+            if (resourceWrapper.getEntryType() == EntryType.IN) { // 如果是IN，则在Cluster节点上新增线程数和通过请求数，这个是全局的ClusterNode（类的静态变量），和ClusterBuilderSlot的ClusterNode不一样，此处所有请求共享同一个Cluster
                 // Add count for global inbound entry node for global statistics.
                 Constants.ENTRY_NODE.increaseThreadNum();
                 Constants.ENTRY_NODE.addPassRequest(count);
@@ -76,30 +76,30 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
 
             // Handle pass event with registered entry callback handlers.
             for (ProcessorSlotEntryCallback<DefaultNode> handler : StatisticSlotCallbackRegistry.getEntryCallbacks()) {
-                handler.onPass(context, resourceWrapper, node, count, args);
+                handler.onPass(context, resourceWrapper, node, count, args); // 钩子函数
             }
         } catch (PriorityWaitException ex) {
-            node.increaseThreadNum();
+            node.increaseThreadNum(); // 增加线程数
             if (context.getCurEntry().getOriginNode() != null) {
                 // Add count for origin node.
                 context.getCurEntry().getOriginNode().increaseThreadNum();
             }
 
-            if (resourceWrapper.getEntryType() == EntryType.IN) {
+            if (resourceWrapper.getEntryType() == EntryType.IN) { // 增加线程数 共享全局Cluster
                 // Add count for global inbound entry node for global statistics.
                 Constants.ENTRY_NODE.increaseThreadNum();
             }
             // Handle pass event with registered entry callback handlers.
             for (ProcessorSlotEntryCallback<DefaultNode> handler : StatisticSlotCallbackRegistry.getEntryCallbacks()) {
-                handler.onPass(context, resourceWrapper, node, count, args);
+                handler.onPass(context, resourceWrapper, node, count, args); // 钩子函数
             }
         } catch (BlockException e) {
             // Blocked, set block exception to current entry.
             context.getCurEntry().setBlockError(e);
 
-            // Add block count.
+            // Add block count. 如果触发了BlockException，则说明获取token失败，被限流，因此增加当前秒Block的请求数
             node.increaseBlockQps(count);
-            if (context.getCurEntry().getOriginNode() != null) {
+            if (context.getCurEntry().getOriginNode() != null) { // 这里是针对调用方origin的统计
                 context.getCurEntry().getOriginNode().increaseBlockQps(count);
             }
 
@@ -130,14 +130,14 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             // Calculate response time (use completeStatTime as the time of completion).
             long completeStatTime = TimeUtil.currentTimeMillis();
             context.getCurEntry().setCompleteTimestamp(completeStatTime);
-            long rt = completeStatTime - context.getCurEntry().getCreateTimestamp();
+            long rt = completeStatTime - context.getCurEntry().getCreateTimestamp();  // 获取当前请求的round trip time，即响应时间
 
             Throwable error = context.getCurEntry().getError();
 
             // Record response time and success count.
             recordCompleteFor(node, count, rt, error);
             recordCompleteFor(context.getCurEntry().getOriginNode(), count, rt, error);
-            if (resourceWrapper.getEntryType() == EntryType.IN) {
+            if (resourceWrapper.getEntryType() == EntryType.IN) { // 针对所有的入口流量，使用了一个全局的 ENTRY_NODE 进行统计，所以我们也要知道，系统保护规则是全局的，和具体的某个资源没有关系。
                 recordCompleteFor(Constants.ENTRY_NODE, count, rt, error);
             }
         }
@@ -145,9 +145,9 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
         // Handle exit event with registered exit callback handlers.
         Collection<ProcessorSlotExitCallback> exitCallbacks = StatisticSlotCallbackRegistry.getExitCallbacks();
         for (ProcessorSlotExitCallback handler : exitCallbacks) {
-            handler.onExit(context, resourceWrapper, count, args);
+            handler.onExit(context, resourceWrapper, count, args); // 回调钩子
         }
-
+        // 调用下游的slot exit方法
         fireExit(context, resourceWrapper, count);
     }
 
@@ -155,8 +155,8 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
         if (node == null) {
             return;
         }
-        node.addRtAndSuccess(rt, batchCount);
-        node.decreaseThreadNum();
+        node.addRtAndSuccess(rt, batchCount); // 记录全局的round trip time
+        node.decreaseThreadNum(); // 线程数减1，减少当前资源的并发线程数
 
         if (error != null && !(error instanceof BlockException)) {
             node.increaseExceptionQps(batchCount);

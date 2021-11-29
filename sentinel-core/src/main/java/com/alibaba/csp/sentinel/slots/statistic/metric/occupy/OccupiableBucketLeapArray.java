@@ -15,12 +15,12 @@
  */
 package com.alibaba.csp.sentinel.slots.statistic.metric.occupy;
 
-import java.util.List;
-
 import com.alibaba.csp.sentinel.slots.statistic.MetricEvent;
 import com.alibaba.csp.sentinel.slots.statistic.base.LeapArray;
 import com.alibaba.csp.sentinel.slots.statistic.base.WindowWrap;
 import com.alibaba.csp.sentinel.slots.statistic.data.MetricBucket;
+
+import java.util.List;
 
 /**
  * @author jialiang.linjl
@@ -35,7 +35,7 @@ public class OccupiableBucketLeapArray extends LeapArray<MetricBucket> {
         super(sampleCount, intervalInMs);
         this.borrowArray = new FutureBucketLeapArray(sampleCount, intervalInMs);
     }
-
+    // 在重置的时候，它不是直接重置成 0 的。
     @Override
     public MetricBucket newEmptyBucket(long time) {
         MetricBucket newBucket = new MetricBucket();
@@ -47,8 +47,8 @@ public class OccupiableBucketLeapArray extends LeapArray<MetricBucket> {
 
         return newBucket;
     }
-
-    @Override
+    // 在重置的时候，它不是直接重置成 0 的。
+    @Override // borrowArray 存储了未来的时间窗口的值。当主线到达某个时间窗口的时候，如果发现当前时间窗口是过期的，前面介绍过，会需要重置这个窗口，这个时候，它会检查一下 borrowArray 是否有值，如果有，将其作为这个窗口的初始值填充进来，而不是简单重置为 0 值。
     protected WindowWrap<MetricBucket> resetWindowTo(WindowWrap<MetricBucket> w, long time) {
         // Update the start time and reset value.
         w.resetTo(time);

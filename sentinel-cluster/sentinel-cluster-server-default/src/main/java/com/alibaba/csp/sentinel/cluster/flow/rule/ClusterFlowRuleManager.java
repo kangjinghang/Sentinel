@@ -98,7 +98,7 @@ public final class ClusterFlowRuleManager {
         String defaultNamespace = ServerConstants.DEFAULT_NAMESPACE;
         registerPropertyInternal(defaultNamespace, defaultProperty);
     }
-
+    // propertySupplier:自动根据 namespace 创建动态规则源的生成器
     public static void setPropertySupplier(Function<String, SentinelProperty<List<FlowRule>>> propertySupplier) {
         AssertUtil.notNull(propertySupplier, "flow rule property supplier cannot be null");
         ClusterFlowRuleManager.propertySupplier = propertySupplier;

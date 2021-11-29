@@ -15,13 +15,6 @@
  */
 package com.alibaba.csp.sentinel.slots.system;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.EntryType;
 import com.alibaba.csp.sentinel.concurrent.NamedThreadFactory;
@@ -31,6 +24,13 @@ import com.alibaba.csp.sentinel.property.SentinelProperty;
 import com.alibaba.csp.sentinel.property.SimplePropertyListener;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * <p>
@@ -85,7 +85,7 @@ public final class SystemRuleManager {
     private static AtomicBoolean checkSystemStatus = new AtomicBoolean(false);
 
     private static SystemStatusListener statusListener = null;
-    private final static SystemPropertyListener listener = new SystemPropertyListener();
+    private final static SystemPropertyListener listener = new SystemPropertyListener(); // 观察者，当systemRule配置发生变更时，会通知该Listener
     private static SentinelProperty<List<SystemRule>> currentProperty = new DynamicSentinelProperty<List<SystemRule>>();
 
     @SuppressWarnings("PMD.ThreadPoolCreationRule")
@@ -95,8 +95,8 @@ public final class SystemRuleManager {
     static {
         checkSystemStatus.set(false);
         statusListener = new SystemStatusListener();
-        scheduler.scheduleAtFixedRate(statusListener, 0, 1, TimeUnit.SECONDS);
-        currentProperty.addListener(listener);
+        scheduler.scheduleAtFixedRate(statusListener, 0, 1, TimeUnit.SECONDS); // 每秒查询一次
+        currentProperty.addListener(listener); // 添加观察者
     }
 
     /**
@@ -181,14 +181,14 @@ public final class SystemRuleManager {
     }
 
     static class SystemPropertyListener extends SimplePropertyListener<List<SystemRule>> {
-
+        // 会先关闭系统检查，当配置修改完成之后，再启用。
         @Override
         public synchronized void configUpdate(List<SystemRule> rules) {
-            restoreSetting();
+            restoreSetting(); // 恢复到默认状态
             // systemRules = rules;
             if (rules != null && rules.size() >= 1) {
                 for (SystemRule rule : rules) {
-                    loadSystemConf(rule);
+                    loadSystemConf(rule); // 加载配置
                 }
             } else {
                 checkSystemStatus.set(false);
@@ -207,7 +207,7 @@ public final class SystemRuleManager {
                 maxThread,
                 qps));
         }
-
+        // 重置配置信息
         protected void restoreSetting() {
             checkSystemStatus.set(false);
 
@@ -238,7 +238,7 @@ public final class SystemRuleManager {
     public static double getCpuUsageThreshold() {
         return highestCpuUsage;
     }
-
+    // 修改则判断是否小于默认配置，由于之前已经重新初始化过了，所以如果有修改，肯定会比默认的值小。
     public static void loadSystemConf(SystemRule rule) {
         boolean checkStatus = false;
         // Check if it's valid.
@@ -282,7 +282,7 @@ public final class SystemRuleManager {
     }
 
     /**
-     * Apply {@link SystemRule} to the resource. Only inbound traffic will be checked.
+     * Apply {@link SystemRule} to the resource. Only inbound traffic will be checked. 判断是否启用SystemRule
      *
      * @param resourceWrapper the resource.
      * @throws BlockException when any system rule's threshold is exceeded.
@@ -291,41 +291,41 @@ public final class SystemRuleManager {
         if (resourceWrapper == null) {
             return;
         }
-        // Ensure the checking switch is on.
+        // Ensure the checking switch is on. 检查系统状态是否为false，如果为false，则代表不检查。如果不配置SystemRule，则不检查
         if (!checkSystemStatus.get()) {
             return;
         }
 
-        // for inbound traffic only
+        // for inbound traffic only 系统检查状态，只检查外部调内部的接口状态 IN，内部调用外部接口不检查
         if (resourceWrapper.getEntryType() != EntryType.IN) {
             return;
         }
 
-        // total qps
+        // total qps 获取当前系统的QPS，根据ClusterNode（静态变量，所有请求共享）的successQps计算 successQps总数/时间 每秒成功的记录
         double currentQps = Constants.ENTRY_NODE == null ? 0.0 : Constants.ENTRY_NODE.passQps();
-        if (currentQps + count > qps) {
+        if (currentQps + count > qps) { // 当前时间窗口的成功率已经超过指定成功率，则报警
             throw new SystemBlockException(resourceWrapper.getName(), "qps");
         }
 
-        // total thread
+        // total thread 总线程数
         int currentThread = Constants.ENTRY_NODE == null ? 0 : Constants.ENTRY_NODE.curThreadNum();
         if (currentThread > maxThread) {
-            throw new SystemBlockException(resourceWrapper.getName(), "thread");
+            throw new SystemBlockException(resourceWrapper.getName(), "thread"); // 超过报警
         }
-
+        // 平均响应时长
         double rt = Constants.ENTRY_NODE == null ? 0 : Constants.ENTRY_NODE.avgRt();
         if (rt > maxRt) {
-            throw new SystemBlockException(resourceWrapper.getName(), "rt");
+            throw new SystemBlockException(resourceWrapper.getName(), "rt"); // 超过配置的最大响应时长，则报警
         }
 
-        // load. BBR algorithm.
+        // load. BBR algorithm. 完全按照RT,BBR算法来
         if (highestSystemLoadIsSet && getCurrentSystemAvgLoad() > highestSystemLoad) {
             if (!checkBbr(currentThread)) {
                 throw new SystemBlockException(resourceWrapper.getName(), "load");
             }
         }
 
-        // cpu usage
+        // cpu usage CPU使用率超过限制
         if (highestCpuUsageIsSet && getCurrentCpuUsage() > highestCpuUsage) {
             throw new SystemBlockException(resourceWrapper.getName(), "cpu");
         }

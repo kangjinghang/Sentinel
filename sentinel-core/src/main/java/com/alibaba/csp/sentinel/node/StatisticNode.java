@@ -89,21 +89,21 @@ import java.util.concurrent.atomic.LongAdder;
  */
 public class StatisticNode implements Node {
 
-    /**
+    /** 对于 秒 来说，一轮是 1 秒，分为 2 个时间窗口，每个时间窗口是 0.5 秒；
      * Holds statistics of the recent {@code INTERVAL} milliseconds. The {@code INTERVAL} is divided into time spans
      * by given {@code sampleCount}. 定义了一个使用数组保存数据的计量器。SAMPLE_COUNT，样本窗口数量，默认值为2。INTERVAL时间窗口长度，默认值为1000ms
      */
     private transient volatile Metric rollingCounterInSecond = new ArrayMetric(SampleCountProperty.SAMPLE_COUNT,
         IntervalProperty.INTERVAL);
 
-    /**
+    /** 对于 分 来说，一轮是 60 秒，分为 60 个时间窗口，每个时间窗口是 1 秒；
      * Holds statistics of the recent 60 seconds. The windowLengthInMs is deliberately set to 1000 milliseconds,
-     * meaning each bucket per second, in this way we can get accurate statistics of each second.
+     * meaning each bucket per second, in this way we can get accurate statistics of each second. 每分钟的滚动计数器，1分钟分为60个记录，1分钟一个。
      */
     private transient Metric rollingCounterInMinute = new ArrayMetric(60, 60 * 1000, false);
 
     /**
-     * The counter for thread count.
+     * The counter for thread count. LongAdder 来统计并发量
      */
     private LongAdder curThreadNum = new LongAdder();
 
@@ -197,7 +197,7 @@ public class StatisticNode implements Node {
     }
 
     @Override
-    public double passQps() { // rollingCounterInSecond.pass() 当前时间窗口中统计的通过的请求数量；rollingCounterInSecond.getWindowIntervalInSec() 时间窗口长度
+    public double passQps() { // rollingCounterInSecond.pass() 当前时间窗口中统计的通过的请求数量（所有样本窗口的统计之和）；rollingCounterInSecond.getWindowIntervalInSec() 时间窗口长度
         return rollingCounterInSecond.pass() / rollingCounterInSecond.getWindowIntervalInSec(); // 计算出的就是QPS
     }
 

@@ -57,21 +57,21 @@ import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
 public class Context {
 
     /**
-     * Context name.
+     * Context name. 上下文名称，作用是为了区分不同的调用链路
      */
     private final String name;
 
     /**
-     * The entrance node of current invocation tree.
+     * The entrance node of current invocation tree. 当前调用树的入口节点
      */
     private DefaultNode entranceNode;
 
     /**
-     * Current processing entry.
+     * Current processing entry. 当前入口，Entry的实现类CtEntry包含类parent和child引用，形成了树状结构
      */
     private Entry curEntry;
 
-    /**
+    /** 来源，比如服务名称、ip等
      * The origin of this context (usually indicate different invokers, e.g. service consumer name or origin IP).
      */
     private String origin = "";
@@ -93,7 +93,7 @@ public class Context {
     public Context(DefaultNode entranceNode, String name) {
         this(name, entranceNode, false);
     }
-
+    // 初始化的时候，curEntry属性是没有值的
     public Context(String name, DefaultNode entranceNode, boolean async) {
         this.name = name;
         this.entranceNode = entranceNode;
@@ -113,7 +113,7 @@ public class Context {
     }
 
     public Context setCurNode(Node node) {
-        this.curEntry.setCurNode(node);
+        this.curEntry.setCurNode(node); // 其实是设置了curEntry的curNode，Context本身没有直接引用curNode
         return this;
     }
 
@@ -172,8 +172,8 @@ public class Context {
     }
 
     /**
-     * Get the parent {@link Node} of the current.
-     *
+     * Get the parent {@link Node} of the current.  curEntry 是带有树形关系的，会建立起链表
+     * 如果当前节点不为null，则当前节点就为最后一个节点，如果当前节点为null，则为entranceNode。
      * @return the parent node of the current.
      */
     public Node getLastNode() {

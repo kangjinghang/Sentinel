@@ -15,15 +15,14 @@
  */
 package com.alibaba.csp.sentinel.slots.system;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
-import java.util.concurrent.TimeUnit;
-
 import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.util.StringUtil;
-
 import com.sun.management.OperatingSystemMXBean;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author jialiang.linjl
@@ -48,7 +47,7 @@ public class SystemStatusListener implements Runnable {
 
     @Override
     public void run() {
-        try {
+        try { // 调用 MBean 中的方法获取当前的系统负载和 CPU 使用率
             OperatingSystemMXBean osBean = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
             currentLoad = osBean.getSystemLoadAverage();
 

@@ -22,7 +22,7 @@ package com.alibaba.csp.sentinel.dashboard.rule;
 public interface DynamicRulePublisher<T> {
 
     /**
-     * Publish rules to remote rule configuration center for given application name.
+     * Publish rules to remote rule configuration center for given application name. 应用维度的规则推送
      *
      * @param app app name
      * @param rules list of rules to push

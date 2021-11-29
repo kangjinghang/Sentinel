@@ -44,18 +44,18 @@ public class DefaultController implements TrafficShapingController {
     public boolean canPass(Node node, int acquireCount) {
         return canPass(node, acquireCount, false);
     }
-    // 快速失败的流控效果中的通过性判断
+    // 快速失败的流控效果中的通过性判断，它原来是用来满足 prioritized 类型的资源的，我们可以认为这类请求有较高的优先级。如果 QPS 达到阈值，这类资源通常不能用快速失败返回， 而是让它去预占未来的 QPS 容量。
     @Override
     public boolean canPass(Node node, int acquireCount, boolean prioritized) {
         int curCount = avgUsedTokens(node); // 获取当前时间窗口中已经统计的数据
         if (curCount + acquireCount > count) { // 若已经统计的数据与本次请求的数量和 大于 设置的阈值，则返回false，表示没有通过检测，若小于阈值，则返回true，表示通过检测
-            if (prioritized && grade == RuleConstant.FLOW_GRADE_QPS) {
+            if (prioritized && grade == RuleConstant.FLOW_GRADE_QPS) { // 只有设置了 prioritized 的情况才会进入到下面的 if 分支，也就是说，对于一般的场景，被限流了，就快速失败
                 long currentTime;
                 long waitInMs;
                 currentTime = TimeUtil.currentTimeMillis();
-                waitInMs = node.tryOccupyNext(currentTime, acquireCount, count);
+                waitInMs = node.tryOccupyNext(currentTime, acquireCount, count); // tryOccupyNext 非常复杂，大意就是说去占有"未来的"令牌，可以看到，下面做了 sleep，为了保证 QPS 不会因为预占而撑大
                 if (waitInMs < OccupyTimeoutProperty.getOccupyTimeout()) {
-                    node.addWaitingRequest(currentTime + waitInMs, acquireCount);
+                    node.addWaitingRequest(currentTime + waitInMs, acquireCount); // 就是这里设置了 borrowArray 的值
                     node.addOccupiedPass(acquireCount);
                     sleep(waitInMs);
 
@@ -63,7 +63,7 @@ public class DefaultController implements TrafficShapingController {
                     throw new PriorityWaitException(waitInMs);
                 }
             }
-            return false;
+            return false; // 表示不能通过
         }
         return true;
     }

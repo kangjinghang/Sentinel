@@ -82,9 +82,9 @@ public class DefaultNode extends StatisticNode {
             RecordLog.warn("Trying to add null child to node <{}>, ignored", id.getName());
             return;
         }
-        if (!childList.contains(node)) {
+        if (!childList.contains(node)) { // 如果子节点包含了该节点，则跳过
             synchronized (this) {
-                if (!childList.contains(node)) {
+                if (!childList.contains(node)) { // 不包含该节点，则将当前节点挂在子节点里面
                     Set<Node> newSet = new HashSet<>(childList.size() + 1);
                     newSet.addAll(childList);
                     newSet.add(node);

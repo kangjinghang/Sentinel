@@ -15,9 +15,6 @@
  */
 package com.alibaba.csp.sentinel.slots.block.authority;
 
-import java.util.Map;
-import java.util.Set;
-
 import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.context.Context;
 import com.alibaba.csp.sentinel.node.DefaultNode;
@@ -25,6 +22,9 @@ import com.alibaba.csp.sentinel.slotchain.AbstractLinkedProcessorSlot;
 import com.alibaba.csp.sentinel.slotchain.ProcessorSlot;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.spi.Spi;
+
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A {@link ProcessorSlot} that dedicates to {@link AuthorityRule} checking.
@@ -38,7 +38,7 @@ public class AuthoritySlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count, boolean prioritized, Object... args)
         throws Throwable {
-        checkBlackWhiteAuthority(resourceWrapper, context);
+        checkBlackWhiteAuthority(resourceWrapper, context); // 检查黑白名单
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
     }
 
@@ -48,19 +48,19 @@ public class AuthoritySlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     }
 
     void checkBlackWhiteAuthority(ResourceWrapper resource, Context context) throws AuthorityException {
-        Map<String, Set<AuthorityRule>> authorityRules = AuthorityRuleManager.getAuthorityRules();
+        Map<String, Set<AuthorityRule>> authorityRules = AuthorityRuleManager.getAuthorityRules(); // 获取认证的规则
 
         if (authorityRules == null) {
             return;
         }
-
+        // 根据资源名称获取相应的规则
         Set<AuthorityRule> rules = authorityRules.get(resource.getName());
         if (rules == null) {
             return;
         }
 
         for (AuthorityRule rule : rules) {
-            if (!AuthorityRuleChecker.passCheck(rule, context)) {
+            if (!AuthorityRuleChecker.passCheck(rule, context)) { // 只要有一条规则校验不通过，就抛出AuthorityException
                 throw new AuthorityException(context.getOrigin(), rule);
             }
         }

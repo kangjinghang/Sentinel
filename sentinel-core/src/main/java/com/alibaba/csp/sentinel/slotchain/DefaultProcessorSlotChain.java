@@ -71,7 +71,7 @@ public class DefaultProcessorSlotChain extends ProcessorSlotChain {
 
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, Object t, int count, boolean prioritized, Object... args)
-        throws Throwable {
+        throws Throwable { // 实际是执行的first属性的transformEntry方法
         first.transformEntry(context, resourceWrapper, t, count, prioritized, args);
     }
 

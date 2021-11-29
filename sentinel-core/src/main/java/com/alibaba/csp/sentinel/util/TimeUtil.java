@@ -15,14 +15,14 @@
  */
 package com.alibaba.csp.sentinel.util;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.LongAdder;
-
 import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.slots.statistic.base.LeapArray;
 import com.alibaba.csp.sentinel.slots.statistic.base.WindowWrap;
 import com.alibaba.csp.sentinel.util.function.Tuple2;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * <p>Provides millisecond-level time of OS.</p>
@@ -103,7 +103,7 @@ public final class TimeUtil implements Runnable {
         daemon.setName("sentinel-time-tick-thread");
         daemon.start();
     }
-
+    // 相当于启动了一个线程每sleep 1ms唤醒并且调用System.currentTimeMillis记录当前时间戳到volatile变量中。这段代码我理解是通过这个线程来更新时间戳，这样每秒调用System.currentTimeMillis的次数稳定为1000次，如果不通过这个Util的话调用的次数无法估计，有可能远大于1000次
     @Override
     public void run() {
         while (true) {

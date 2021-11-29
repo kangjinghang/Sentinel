@@ -137,18 +137,18 @@ public class CtSph implements Sph {
         if (chain == null) { // 若没有找到chain，则意味着chain数量超出了阈值，则直接返回一个无需做规则检测的资源操作对象
             return new CtEntry(resourceWrapper, null, context);
         }
-        // 创建一个资源操作对象
+        // 创建一个资源操作对象。总的来说，就是去一个个链式的去执行slot的方法，每个slot会根据创建的规则，进行自己的逻辑处理，当统计的结果达到设置的阈值时，就会将BlockException抛出到上层，都成功的话就返回一个Entry对象
         Entry e = new CtEntry(resourceWrapper, chain, context);
-        try { // 对资源进行操作
+        try { // 对资源进行操作，执行Slot的entry方法，也就是逐个执行slot的entry方法
             chain.entry(context, resourceWrapper, null, count, prioritized, args);
         } catch (BlockException e1) {
             e.exit(count, args);
-            throw e1;
+            throw e1; // chain的entry方法抛出了BlockException，则将该异常继续向上抛出
         } catch (Throwable e1) {
             // This should not happen, unless there are errors existing in Sentinel internal.
             RecordLog.info("Sentinel unexpected exception", e1);
         }
-        return e;
+        return e; // 正常执行了，则最后会将该entry对象返回
     }
 
     /**
@@ -174,13 +174,13 @@ public class CtSph implements Sph {
     /**
      * Get {@link ProcessorSlotChain} of the resource. new {@link ProcessorSlotChain} will
      * be created if the resource doesn't relate one.
-     *
+     * one slot chain per resource，一个资源对应一个{@link ProcessorSlotChain}
      * <p>Same resource({@link ResourceWrapper#equals(Object)}) will share the same
      * {@link ProcessorSlotChain} globally, no matter in which {@link Context}.<p/>
-     *
+     * 如果是相同的资源（{@link ResourceWrapper#equals(Object)}）会共享一个{@link ProcessorSlotChain}
      * <p>
      * Note that total {@link ProcessorSlot} count must not exceed {@link Constants#MAX_SLOT_CHAIN_SIZE},
-     * otherwise null will return.
+     * otherwise null will return.总共的{@link ProcessorSlotChain} 不能超过6000个，也就是说资源不能超过6000个，否则返回null
      * </p>
      *
      * @param resourceWrapper target resource
@@ -196,7 +196,7 @@ public class CtSph implements Sph {
                     if (chainMap.size() >= Constants.MAX_SLOT_CHAIN_SIZE) {
                         return null;
                     }
-                    // 创建新的chain
+                    // 创建新的chain（真正的构造方法）
                     chain = SlotChainProvider.newSlotChain();
                     Map<ResourceWrapper, ProcessorSlotChain> newMap = new HashMap<ResourceWrapper, ProcessorSlotChain>(
                         chainMap.size() + 1);

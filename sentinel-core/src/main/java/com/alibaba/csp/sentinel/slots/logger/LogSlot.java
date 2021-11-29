@@ -34,11 +34,11 @@ public class LogSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode obj, int count, boolean prioritized, Object... args)
         throws Throwable {
-        try {
+        try { // 直接 fire 出去了，也就是说，先处理责任链上后面的那些节点，如果它们抛出了 BlockException，那么这里才做处理。
             fireEntry(context, resourceWrapper, obj, count, prioritized, args);
         } catch (BlockException e) {
             EagleEyeLogUtil.log(resourceWrapper.getName(), e.getClass().getSimpleName(), e.getRuleLimitApp(),
-                context.getOrigin(), count);
+                context.getOrigin(), count); // 调用了 EagleEyeLogUtil#log 方法，它其实就是，将被设置的规则 block 的信息记录到日志文件 sentinel-block.log 中。也就是记录哪些接口被规则挡住了。
             throw e;
         } catch (Throwable e) {
             RecordLog.warn("Unexpected entry exception", e);

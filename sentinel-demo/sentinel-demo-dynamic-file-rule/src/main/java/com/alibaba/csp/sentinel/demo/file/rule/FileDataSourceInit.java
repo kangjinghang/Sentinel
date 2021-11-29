@@ -15,9 +15,6 @@
  */
 package com.alibaba.csp.sentinel.demo.file.rule;
 
-import java.io.File;
-import java.util.List;
-
 import com.alibaba.csp.sentinel.datasource.FileRefreshableDataSource;
 import com.alibaba.csp.sentinel.datasource.FileWritableDataSource;
 import com.alibaba.csp.sentinel.datasource.ReadableDataSource;
@@ -28,6 +25,9 @@ import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
 import com.alibaba.csp.sentinel.transport.util.WritableDataSourceRegistry;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+
+import java.io.File;
+import java.util.List;
 
 /**
  * <p>
@@ -48,12 +48,12 @@ public class FileDataSourceInit implements InitFunc {
         // A fake path.
         String flowRuleDir = System.getProperty("user.home") + File.separator + "sentinel" + File.separator + "rules";
         String flowRuleFile = "flowRule.json";
-        String flowRulePath = flowRuleDir + File.separator + flowRuleFile;
-
+        String flowRulePath = flowRuleDir + File.separator + flowRuleFile; // 保存了限流规则的文件的地址
+        // 创建文件规则数据源
         ReadableDataSource<String, List<FlowRule>> ds = new FileRefreshableDataSource<>(
             flowRulePath, source -> JSON.parseObject(source, new TypeReference<List<FlowRule>>() {})
         );
-        // Register to flow rule manager.
+        // Register to flow rule manager. 将Property注册到 RuleManager 中去
         FlowRuleManager.register2Property(ds.getProperty());
 
         WritableDataSource<List<FlowRule>> wds = new FileWritableDataSource<>(flowRulePath, this::encodeJson);

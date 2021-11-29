@@ -45,7 +45,7 @@ public class ArrayMetric implements Metric {
         if (enableOccupy) {
             this.data = new OccupiableBucketLeapArray(sampleCount, intervalInMs);
         } else {
-            this.data = new BucketLeapArray(sampleCount, intervalInMs);
+            this.data = new BucketLeapArray(sampleCount, intervalInMs); // 分钟维度统计，BucketLeapArray
         }
     }
 

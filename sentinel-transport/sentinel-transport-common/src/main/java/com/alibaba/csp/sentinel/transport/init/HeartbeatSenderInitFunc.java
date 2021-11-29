@@ -15,11 +15,6 @@
  */
 package com.alibaba.csp.sentinel.transport.init;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor.DiscardOldestPolicy;
-import java.util.concurrent.TimeUnit;
-
 import com.alibaba.csp.sentinel.concurrent.NamedThreadFactory;
 import com.alibaba.csp.sentinel.config.SentinelConfig;
 import com.alibaba.csp.sentinel.heartbeat.HeartbeatSenderProvider;
@@ -29,8 +24,13 @@ import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.transport.HeartbeatSender;
 import com.alibaba.csp.sentinel.transport.config.TransportConfig;
 
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor.DiscardOldestPolicy;
+import java.util.concurrent.TimeUnit;
+
 /**
- * Global init function for heartbeat sender.
+ * Global init function for heartbeat sender. 客户端主动发送心跳信息给 dashboard
  *
  * @author Eric Zhao
  */
@@ -58,7 +58,7 @@ public class HeartbeatSenderInitFunc implements InitFunc {
         initSchedulerIfNeeded();
         long interval = retrieveInterval(sender);
         setIntervalIfNotExists(interval);
-        scheduleHeartbeatTask(sender, interval);
+        scheduleHeartbeatTask(sender, interval); // 启动一个定时器，发送心跳信息
     }
 
     private boolean isValidHeartbeatInterval(Long interval) {

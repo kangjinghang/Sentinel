@@ -15,12 +15,12 @@
  */
 package com.alibaba.csp.sentinel.demo.cluster;
 
-import java.util.Collections;
-
 import com.alibaba.csp.sentinel.cluster.server.ClusterTokenServer;
 import com.alibaba.csp.sentinel.cluster.server.SentinelDefaultTokenServer;
 import com.alibaba.csp.sentinel.cluster.server.config.ClusterServerConfigManager;
 import com.alibaba.csp.sentinel.cluster.server.config.ServerTransportConfig;
+
+import java.util.Collections;
 
 /**
  * <p>Cluster server demo (alone mode).</p>
@@ -44,7 +44,7 @@ public class ClusterServerDemo {
             .setPort(11111));
         ClusterServerConfigManager.loadServerNamespaceSet(Collections.singleton(DemoConstants.APP_NAME));
 
-        // Start the server.
+        // Start the server. 创建一个 ClusterTokenServer 的实例，独立模式
         tokenServer.start();
     }
 }

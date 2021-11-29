@@ -16,7 +16,7 @@
 package com.alibaba.csp.sentinel.transport;
 
 /**
- * @author Eric Zhao
+ * @author Eric Zhao 一个可以对外提供 api 接口的服务端接口
  */
 public interface CommandCenter {
 

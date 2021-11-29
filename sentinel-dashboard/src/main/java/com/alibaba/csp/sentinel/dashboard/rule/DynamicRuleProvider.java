@@ -20,6 +20,6 @@ package com.alibaba.csp.sentinel.dashboard.rule;
  * @since 1.4.0
  */
 public interface DynamicRuleProvider<T> {
-
+    // 应用维度的规则拉取
     T getRules(String appName) throws Exception;
 }

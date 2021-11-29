@@ -15,23 +15,19 @@
  */
 package com.alibaba.csp.sentinel.slots.clusterbuilder;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.EntryType;
 import com.alibaba.csp.sentinel.context.Context;
 import com.alibaba.csp.sentinel.context.ContextUtil;
-import com.alibaba.csp.sentinel.node.ClusterNode;
-import com.alibaba.csp.sentinel.node.DefaultNode;
-import com.alibaba.csp.sentinel.node.IntervalProperty;
-import com.alibaba.csp.sentinel.node.Node;
-import com.alibaba.csp.sentinel.node.SampleCountProperty;
+import com.alibaba.csp.sentinel.node.*;
 import com.alibaba.csp.sentinel.slotchain.AbstractLinkedProcessorSlot;
 import com.alibaba.csp.sentinel.slotchain.ProcessorSlotChain;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slotchain.StringResourceWrapper;
 import com.alibaba.csp.sentinel.spi.Spi;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -77,26 +73,26 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args)
         throws Throwable {
-        if (clusterNode == null) {
+        if (clusterNode == null) { // 一个Resource共享同一个Chain。因此当前类的成员变量clusterNode，对于同一个resource来说，也是全局共享的
             synchronized (lock) {
                 if (clusterNode == null) {
                     // Create the cluster node.
                     clusterNode = new ClusterNode(resourceWrapper.getName(), resourceWrapper.getResourceType());
                     HashMap<ResourceWrapper, ClusterNode> newMap = new HashMap<>(Math.max(clusterNodeMap.size(), 16));
                     newMap.putAll(clusterNodeMap);
-                    newMap.put(node.getId(), clusterNode);
+                    newMap.put(node.getId(), clusterNode); // 将clusterNode保存到全局的map中去
 
                     clusterNodeMap = newMap;
                 }
             }
         }
-        node.setClusterNode(clusterNode);
+        node.setClusterNode(clusterNode); // 将clusterNode塞到DefaultNode中去
 
         /*
          * if context origin is set, we should get or create a new {@link Node} of
-         * the specific origin.
+         * the specific origin. 如果origin调用方不为空，则创建一个对应的统计Node。
          */
-        if (!"".equals(context.getOrigin())) {
+        if (!"".equals(context.getOrigin())) { // origin和context并没有交叉。是平行的统计空间
             Node originNode = node.getClusterNode().getOrCreateOriginNode(context.getOrigin());
             context.getCurEntry().setOriginNode(originNode);
         }

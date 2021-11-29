@@ -15,6 +15,15 @@
  */
 package com.alibaba.csp.sentinel.transport.command;
 
+import com.alibaba.csp.sentinel.command.CommandHandler;
+import com.alibaba.csp.sentinel.command.CommandHandlerProvider;
+import com.alibaba.csp.sentinel.concurrent.NamedThreadFactory;
+import com.alibaba.csp.sentinel.transport.CommandCenter;
+import com.alibaba.csp.sentinel.transport.command.http.HttpEventTask;
+import com.alibaba.csp.sentinel.transport.config.TransportConfig;
+import com.alibaba.csp.sentinel.transport.log.CommandCenterLog;
+import com.alibaba.csp.sentinel.util.StringUtil;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -22,23 +31,7 @@ import java.net.SocketException;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import com.alibaba.csp.sentinel.command.CommandHandler;
-import com.alibaba.csp.sentinel.command.CommandHandlerProvider;
-import com.alibaba.csp.sentinel.concurrent.NamedThreadFactory;
-import com.alibaba.csp.sentinel.transport.log.CommandCenterLog;
-import com.alibaba.csp.sentinel.transport.CommandCenter;
-import com.alibaba.csp.sentinel.transport.command.http.HttpEventTask;
-import com.alibaba.csp.sentinel.transport.config.TransportConfig;
-import com.alibaba.csp.sentinel.util.StringUtil;
+import java.util.concurrent.*;
 
 /***
  * The simple command center provides service to exchange information.
@@ -98,12 +91,12 @@ public class SimpleHttpCommandCenter implements CommandCenter {
             @Override
             public void run() {
                 boolean success = false;
-                ServerSocket serverSocket = getServerSocketFromBasePort(port);
+                ServerSocket serverSocket = getServerSocketFromBasePort(port); // 获取可用的端口用以创建一个ServerSocket
 
                 if (serverSocket != null) {
                     CommandCenterLog.info("[CommandCenter] Begin listening at port " + serverSocket.getLocalPort());
                     socketReference = serverSocket;
-                    executor.submit(new ServerThread(serverSocket));
+                    executor.submit(new ServerThread(serverSocket)); // 在主线程池中启动ServerThread用以接收socket请求
                     success = true;
                     port = serverSocket.getLocalPort();
                 } else {
@@ -187,7 +180,7 @@ public class SimpleHttpCommandCenter implements CommandCenter {
                 try {
                     socket = this.serverSocket.accept();
                     setSocketSoTimeout(socket);
-                    HttpEventTask eventTask = new HttpEventTask(socket);
+                    HttpEventTask eventTask = new HttpEventTask(socket); // 将接收到的socket封装到HttpEventTask中由业务线程去处理
                     bizExecutor.submit(eventTask);
                 } catch (Exception e) {
                     CommandCenterLog.info("Server error", e);

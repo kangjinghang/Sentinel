@@ -15,14 +15,6 @@
  */
 package com.alibaba.csp.sentinel.cluster.server.config;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.alibaba.csp.sentinel.cluster.ClusterConstants;
 import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterParamFlowRuleManager;
@@ -37,6 +29,9 @@ import com.alibaba.csp.sentinel.property.PropertyListener;
 import com.alibaba.csp.sentinel.property.SentinelProperty;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleUtil;
 import com.alibaba.csp.sentinel.util.AssertUtil;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Eric Zhao
@@ -148,7 +143,7 @@ public final class ClusterServerConfigManager {
     }
 
     /**
-     * Load provided server namespace set to property in memory.
+     * Load provided server namespace set to property in memory. 加载namespace
      *
      * @param namespaceSet valid namespace set
      */
@@ -157,7 +152,7 @@ public final class ClusterServerConfigManager {
     }
 
     /**
-     * Load provided server transport configuration to property in memory.
+     * Load provided server transport configuration to property in memory. 加载ServerTransportConfig
      *
      * @param config valid cluster server transport configuration
      */

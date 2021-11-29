@@ -162,7 +162,7 @@ public class FlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args) throws Throwable {
         checkFlow(resourceWrapper, context, node, count, prioritized); // 检测并应用流控规则
-        // 触发下一个slot
+        // 触发责任链下游的下一个slot
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
     }
 

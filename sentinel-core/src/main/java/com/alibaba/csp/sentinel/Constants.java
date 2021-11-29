@@ -60,8 +60,8 @@ public final class Constants {
     public final static DefaultNode ROOT = new EntranceNode(new StringResourceWrapper(ROOT_ID, EntryType.IN),
         new ClusterNode(ROOT_ID, ResourceTypeConstants.COMMON));
 
-    /**
-     * Global statistic node for inbound traffic. Usually used for {@code SystemRule} checking.
+    /**针对所有的入口流量，使用了一个全局的 ENTRY_NODE 进行统计，所以我们也要知道，系统保护规则是全局的，和具体的某个资源没有关系。
+     * Global statistic node for inbound traffic. Usually used for {@code SystemRule} checking. 静态变量，全局（所有请求）共享的ClusterNode
      */
     public final static ClusterNode ENTRY_NODE = new ClusterNode(TOTAL_IN_RESOURCE_NAME, ResourceTypeConstants.COMMON);
 

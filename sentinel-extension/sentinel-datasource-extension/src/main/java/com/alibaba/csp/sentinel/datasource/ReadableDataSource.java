@@ -28,7 +28,7 @@ import com.alibaba.csp.sentinel.property.SentinelProperty;
 public interface ReadableDataSource<S, T> {
 
     /**
-     * Load data data source as the target type.
+     * Load data data source as the target type. 将原始数据转换成我们所需的格式
      *
      * @return the target data.
      * @throws Exception IO or other error occurs
@@ -36,7 +36,7 @@ public interface ReadableDataSource<S, T> {
     T loadConfig() throws Exception;
 
     /**
-     * Read original data from the data source.
+     * Read original data from the data source. 从数据源中读取原始的数据
      *
      * @return the original data.
      * @throws Exception IO or other error occurs
@@ -44,7 +44,7 @@ public interface ReadableDataSource<S, T> {
     S readSource() throws Exception;
 
     /**
-     * Get {@link SentinelProperty} of the data source.
+     * Get {@link SentinelProperty} of the data source. 获取该种数据源的SentinelProperty对象
      *
      * @return the property.
      */

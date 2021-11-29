@@ -24,7 +24,7 @@ import com.alibaba.csp.sentinel.transport.CommandCenter;
 /**
  * @author Eric Zhao
  */
-@InitOrder(-1)
+@InitOrder(-1) // 客户端启动的接口服务，提供给 dashboard 查询数据和规则设置使用的
 public class CommandCenterInitFunc implements InitFunc {
 
     @Override

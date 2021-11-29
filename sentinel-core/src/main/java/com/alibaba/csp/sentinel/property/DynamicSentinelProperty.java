@@ -15,14 +15,14 @@
  */
 package com.alibaba.csp.sentinel.property;
 
+import com.alibaba.csp.sentinel.log.RecordLog;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import com.alibaba.csp.sentinel.log.RecordLog;
-
+// 观察者模式
 public class DynamicSentinelProperty<T> implements SentinelProperty<T> {
-
+    // 观察者
     protected Set<PropertyListener<T>> listeners = Collections.synchronizedSet(new HashSet<PropertyListener<T>>());
     private T value = null;
 
@@ -47,13 +47,13 @@ public class DynamicSentinelProperty<T> implements SentinelProperty<T> {
 
     @Override
     public boolean updateValue(T newValue) {
-        if (isEqual(value, newValue)) {
+        if (isEqual(value, newValue)) { // 如果两个值一样，则返回false，不修改
             return false;
         }
         RecordLog.info("[DynamicSentinelProperty] Config will be updated to: {}", newValue);
 
         value = newValue;
-        for (PropertyListener<T> listener : listeners) {
+        for (PropertyListener<T> listener : listeners) {  // 通知各个观察者
             listener.configUpdate(newValue);
         }
         return true;

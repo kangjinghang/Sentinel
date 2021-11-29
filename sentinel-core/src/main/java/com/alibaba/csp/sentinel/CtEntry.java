@@ -15,8 +15,6 @@
  */
 package com.alibaba.csp.sentinel;
 
-import java.util.LinkedList;
-
 import com.alibaba.csp.sentinel.context.Context;
 import com.alibaba.csp.sentinel.context.ContextUtil;
 import com.alibaba.csp.sentinel.context.NullContext;
@@ -25,6 +23,8 @@ import com.alibaba.csp.sentinel.node.Node;
 import com.alibaba.csp.sentinel.slotchain.ProcessorSlot;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.util.function.BiConsumer;
+
+import java.util.LinkedList;
 
 /**
  * Linked entry within current context.
@@ -45,20 +45,20 @@ class CtEntry extends Entry {
         super(resourceWrapper);
         this.chain = chain;
         this.context = context;
-
+        // 每创建一个新的Entry对象时，都会重新设置context的curEntry，并将context原来的curEntry设置为该新Entry对象的父节点
         setUpEntryFor(context);
     }
-
+    // 调用链的变换，即将当前 Entry 接到传入 Context 的调用链路上
     private void setUpEntryFor(Context context) {
         // The entry should not be associated to NullContext.
         if (context instanceof NullContext) {
             return;
         }
-        this.parent = context.getCurEntry();
+        this.parent = context.getCurEntry(); // 获取「上下文」中上一次的入口
         if (parent != null) {
-            ((CtEntry) parent).child = this;
+            ((CtEntry) parent).child = this; // 然后将当前入口设置为上一次入口的子节点（建立链表的前驱、后继节点）
         }
-        context.setCurEntry(this);
+        context.setCurEntry(this); // 设置「上下文」的当前入口为该类本身
     }
 
     @Override
@@ -111,7 +111,7 @@ class CtEntry extends Entry {
                 // Go through the existing terminate handlers (associated to this invocation).
                 callExitHandlersAndCleanUp(context);
 
-                // Restore the call stack.
+                // Restore the call stack. 重新设置context的curEntry
                 context.setCurEntry(parent);
                 if (parent != null) {
                     ((CtEntry) parent).child = null;

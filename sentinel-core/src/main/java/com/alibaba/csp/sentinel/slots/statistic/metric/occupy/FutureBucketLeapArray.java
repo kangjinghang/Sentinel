@@ -47,7 +47,7 @@ public class FutureBucketLeapArray extends LeapArray<MetricBucket> {
 
     @Override
     public boolean isWindowDeprecated(long time, WindowWrap<MetricBucket> windowWrap) {
-        // Tricky: will only calculate for future.
+        // Tricky: will only calculate for future. 在调用 values() 方法的时候，如果所有的2个窗口都是过期的，将得不到任何的值。所以，我们大概可以判断，给这个数组添加值的时候，使用的时间应该不是当前时间，而是一个未来的时间点。这大概就是 Future 要表达的意思。
         return time >= windowWrap.windowStart();
     }
 }

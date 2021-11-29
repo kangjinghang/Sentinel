@@ -15,11 +15,11 @@
  */
 package com.alibaba.csp.sentinel.slots.block.flow.controller;
 
-import java.util.concurrent.atomic.AtomicLong;
-
-import com.alibaba.csp.sentinel.util.TimeUtil;
 import com.alibaba.csp.sentinel.node.Node;
 import com.alibaba.csp.sentinel.slots.block.flow.TrafficShapingController;
+import com.alibaba.csp.sentinel.util.TimeUtil;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * <p>
@@ -115,7 +115,7 @@ public class WarmUpController implements TrafficShapingController {
         long passQps = (long) node.passQps();
 
         long previousQps = (long) node.previousPassQps();
-        syncToken(previousQps);
+        syncToken(previousQps); // 装填令牌桶
 
         // 开始计算它的斜率
         // 如果进入了警戒线，开始调整他的qps
@@ -124,12 +124,13 @@ public class WarmUpController implements TrafficShapingController {
             long aboveToken = restToken - warningToken;
             // 消耗的速度要比warning快，但是要比慢
             // current interval = restToken*slope+1/count
+            // 这里相当于计算了一个在警戒线以上的interval，计算依据可以参考guava的依靠斜率来计算梯形面积部分代码，1.0/count 为恒定速率，有了interval 那么1.0/interval即为这时候期望的QPS
             double warningQps = Math.nextUp(1.0 / (aboveToken * slope + 1.0 / count));
-            if (passQps + acquireCount <= warningQps) {
+            if (passQps + acquireCount <= warningQps) { //拿这个QPS来做比较
                 return true;
             }
         } else {
-            if (passQps + acquireCount <= count) {
+            if (passQps + acquireCount <= count) { // 如果在警戒线下，就退化为基本的QPS流控
                 return true;
             }
         }
@@ -139,21 +140,21 @@ public class WarmUpController implements TrafficShapingController {
 
     protected void syncToken(long passQps) {
         long currentTime = TimeUtil.currentTimeMillis();
-        currentTime = currentTime - currentTime % 1000;
-        long oldLastFillTime = lastFilledTime.get();
-        if (currentTime <= oldLastFillTime) {
+        currentTime = currentTime - currentTime % 1000; // 获取当前秒
+        long oldLastFillTime = lastFilledTime.get(); // 获取上一次装填令牌桶的时间
+        if (currentTime <= oldLastFillTime) { // 如果当前秒数小于等于上次装填时间，则return，表示一秒钟内只需要装填一次
             return;
         }
 
-        long oldValue = storedTokens.get();
-        long newValue = coolDownTokens(currentTime, passQps);
-
+        long oldValue = storedTokens.get(); // 获取目前令牌桶中的令牌数目
+        long newValue = coolDownTokens(currentTime, passQps); // 根据当前时间和前一秒pass的Qps来装填
+        // 如果CAS成功，那做下一步操作，就算冲突也无所谓，保证一秒装填一次就行
         if (storedTokens.compareAndSet(oldValue, newValue)) {
-            long currentValue = storedTokens.addAndGet(0 - passQps);
-            if (currentValue < 0) {
+            long currentValue = storedTokens.addAndGet(0 - passQps); // 将前一秒的QPS减去，注意点：如果没有前面保证一秒钟内只修改一次的策略，会有多减的可能性
+            if (currentValue < 0) { // 不要成为负数
                 storedTokens.set(0L);
             }
-            lastFilledTime.set(currentTime);
+            lastFilledTime.set(currentTime); // 修改装填时间
         }
 
     }
@@ -163,11 +164,11 @@ public class WarmUpController implements TrafficShapingController {
         long newValue = oldValue;
 
         // 添加令牌的判断前提条件:
-        // 当令牌的消耗程度远远低于警戒线的时候
+        // 当令牌的消耗程度远远低于警戒线的时候，这里将装填的速率恒定为1.0/QPS，那么装填后的值即为oldValue + time / (1000 / count)
         if (oldValue < warningToken) {
             newValue = (long)(oldValue + (currentTime - lastFilledTime.get()) * count / 1000);
         } else if (oldValue > warningToken) {
-            if (passQps < (int)count / coldFactor) {
+            if (passQps < (int)count / coldFactor) { // 如果之前的令牌桶数目已经高于警戒线，那么看pass了的QPS是否小于一个阈值，决定是否装填
                 newValue = (long)(oldValue + (currentTime - lastFilledTime.get()) * count / 1000);
             }
         }

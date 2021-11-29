@@ -118,7 +118,7 @@ public class FlowRuleManager {
      * @param rules new rules to load.
      */
     public static void loadRules(List<FlowRule> rules) {
-        currentProperty.updateValue(rules);
+        currentProperty.updateValue(rules); // 实际上是通过 DynamicSentinelProperty 的 updateValue 方法来动态更新规则的。
     }
 
     static Map<String, List<FlowRule>> getFlowRuleMap() {

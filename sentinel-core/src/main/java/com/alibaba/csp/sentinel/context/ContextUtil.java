@@ -65,7 +65,7 @@ public class ContextUtil {
     private static void initDefaultContext() {
         String defaultContextName = Constants.CONTEXT_DEFAULT_NAME;
         EntranceNode node = new EntranceNode(new StringResourceWrapper(defaultContextName, EntryType.IN), null);
-        Constants.ROOT.addChild(node);
+        Constants.ROOT.addChild(node); // 添加一个默认的 EntranceNode 实例。
         contextNameNodeMap.put(defaultContextName, node);
     }
 
@@ -103,10 +103,10 @@ public class ContextUtil {
      * Same resource in different context will count separately, see {@link NodeSelectorSlot}.
      * </p>
      *
-     * @param name   the context name
+     * @param name   the context name 作用是为了区分不同的调用链路
      * @param origin the origin of this invocation, usually the origin could be the Service
      *               Consumer's app name. The origin is useful when we want to control different
-     *               invoker/consumer separately.
+     *               invoker/consumer separately. 一是用于黑白名单的授权控制，二是可以用来统计诸如从应用 "application-a" 发起的对当前应用 interfaceXxx() 接口的调用，目前这个数据会被统计
      * @return The invocation context of the current thread
      */
     public static Context enter(String name, String origin) {
@@ -116,11 +116,12 @@ public class ContextUtil {
         }
         return trueEnter(name, origin);
     }
-
+    // 一个线程对应一个Context，一个ContextName对应多个Context(ThreadLocal存储)，一个ContextName共享一个EntranceNode
     protected static Context trueEnter(String name, String origin) {
         Context context = contextHolder.get(); // 尝试从ThreadLocal中获取Context
         if (context == null) { // 若ThreadLocal中没有context，则尝试从缓存map中获取
-            Map<String, DefaultNode> localCacheNameMap = contextNameNodeMap; // 缓存map的key为context名称，value为EntranceNode
+            // 用local变量来访问violatile，避免并发访问空指针隐患的同时提升效率。讲究
+            Map<String, DefaultNode> localCacheNameMap = contextNameNodeMap; // 缓存map的key为context名称，value为EntranceNode，只要是相同的资源名，就能直接从map中获取到node
             DefaultNode node = localCacheNameMap.get(name); // 获取EntranceNode -- 双重检测锁DCL -- 为了防止并发创建
             if (node == null) { // 若缓存map的size大于context数量的最大阈值，则直接返回NULL_CONTEXT
                 if (localCacheNameMap.size() > Constants.MAX_CONTEXT_NAME_SIZE) {
@@ -134,7 +135,7 @@ public class ContextUtil {
                             if (contextNameNodeMap.size() > Constants.MAX_CONTEXT_NAME_SIZE) {
                                 setNullContext();
                                 return NULL_CONTEXT;
-                            } else { // 创建一个EntranceNode
+                            } else { // 创建一个EntranceNode入口节点
                                 node = new EntranceNode(new StringResourceWrapper(name, EntryType.IN), null);
                                 // Add entrance node. 将新建的node添加到ROOT
                                 Constants.ROOT.addChild(node);
@@ -150,7 +151,7 @@ public class ContextUtil {
                     }
                 }
             }
-            context = new Context(node, name); // 将node和name封装成context
+            context = new Context(node, name); // 将node和name封装成context，并设置Context的根节点，即设置EntranceNode
             context.setOrigin(origin); // 初始化context的来源
             contextHolder.set(context); // 将context写入ThreadLocal
         }
