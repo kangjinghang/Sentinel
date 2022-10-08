@@ -102,17 +102,17 @@ public abstract class AbstractCircuitBreaker implements CircuitBreaker {
 
     protected boolean fromOpenToHalfOpen(Context context) {
         if (currentState.compareAndSet(State.OPEN, State.HALF_OPEN)) {
-            notifyObservers(State.OPEN, State.HALF_OPEN, null);
-            Entry entry = context.getCurEntry();
-            entry.whenTerminate(new BiConsumer<Context, Entry>() {
+            notifyObservers(State.OPEN, State.HALF_OPEN, null); // 观察者模式，open -> half open
+            Entry entry = context.getCurEntry(); // 当前正在访问的资源
+            entry.whenTerminate(new BiConsumer<Context, Entry>() { // entry.exit() 时，放到退出处理器中
                 @Override
                 public void accept(Context context, Entry entry) {
                     // Note: This works as a temporary workaround for https://github.com/alibaba/Sentinel/issues/1638
                     // Without the hook, the circuit breaker won't recover from half-open state in some circumstances
                     // when the request is actually blocked by upcoming rules (not only degrade rules).
-                    if (entry.getBlockError() != null) {
+                    if (entry.getBlockError() != null) { // 被阻塞，由错误了
                         // Fallback to OPEN due to detecting request is blocked
-                        currentState.compareAndSet(State.HALF_OPEN, State.OPEN);
+                        currentState.compareAndSet(State.HALF_OPEN, State.OPEN); // half open 再切回到 open
                         notifyObservers(State.HALF_OPEN, State.OPEN, 1.0d);
                     }
                 }

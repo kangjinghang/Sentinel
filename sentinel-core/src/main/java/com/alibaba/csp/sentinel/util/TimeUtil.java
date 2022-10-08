@@ -78,7 +78,7 @@ public final class TimeUtil implements Runnable {
     static {
         INSTANCE = new TimeUtil();
     }
-
+    // 当系统空闲时使用系统时间，系统繁忙或时间获取不到使用 sentinel 维护的时间，也是采用 LeapArray 环形数组方式维护，3 个 slot，时间滑动窗口为 1 秒
     public TimeUtil() {
         this.statistics = new LeapArray<TimeUtil.Statistic>(3, 3000) {
 

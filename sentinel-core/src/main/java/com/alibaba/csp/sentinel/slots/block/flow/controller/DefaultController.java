@@ -47,7 +47,7 @@ public class DefaultController implements TrafficShapingController {
     // 快速失败的流控效果中的通过性判断，它原来是用来满足 prioritized 类型的资源的，我们可以认为这类请求有较高的优先级。如果 QPS 达到阈值，这类资源通常不能用快速失败返回， 而是让它去预占未来的 QPS 容量。
     @Override
     public boolean canPass(Node node, int acquireCount, boolean prioritized) {
-        int curCount = avgUsedTokens(node); // 获取当前时间窗口中已经统计的数据
+        int curCount = avgUsedTokens(node); // 从 node 中获取当前时间窗口中已经统计的数据
         if (curCount + acquireCount > count) { // 若已经统计的数据与本次请求的数量和 大于 设置的阈值，则返回false，表示没有通过检测，若小于阈值，则返回true，表示通过检测
             if (prioritized && grade == RuleConstant.FLOW_GRADE_QPS) { // 只有设置了 prioritized 的情况才会进入到下面的 if 分支，也就是说，对于一般的场景，被限流了，就快速失败
                 long currentTime;

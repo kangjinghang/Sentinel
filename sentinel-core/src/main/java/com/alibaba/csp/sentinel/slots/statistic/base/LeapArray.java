@@ -40,10 +40,10 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public abstract class LeapArray<T> {
 
-    protected int windowLengthInMs; // 【样本窗口】长度
+    protected int windowLengthInMs; // 【样本窗口】长度，默认 500ms
     protected int sampleCount; // 一个时间窗中包含的样本窗口数量，sampleCount = intervalInMs / windowLengthInMs
-    protected int intervalInMs; // 时间窗口长度，以毫米为单位
-    private double intervalInSecond; // 时间窗口长度，以秒为单位
+    protected int intervalInMs; // 时间窗口长度，以毫米为单位，默认 1000ms
+    private double intervalInSecond; // 时间窗口长度，以秒为单位，默认 1s
     // 这是一个数组，元素为WindowWrap样本窗口，泛型T为MetricBucket等类型，长度与sampleCount一样
     protected final AtomicReferenceArray<WindowWrap<T>> array;
 

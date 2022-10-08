@@ -54,7 +54,7 @@ import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
  * @see ContextUtil
  * @see NodeSelectorSlot
  */
-public class Context {
+public class Context { // Sentinel熔断限流执行的上下文，包含资源调用的节点和Entry信息
 
     /**
      * Context name. 上下文名称，作用是为了区分不同的调用链路

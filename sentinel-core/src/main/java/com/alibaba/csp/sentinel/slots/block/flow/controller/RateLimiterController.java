@@ -22,7 +22,7 @@ import com.alibaba.csp.sentinel.util.TimeUtil;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * @author jialiang.linjl 漏桶算法来完成匀速器的功能，主要是做到了一个流量整形的功能
+ * @author jialiang.linjl 漏桶算法来完成匀速器的功能，主要是做到了一个流量整形的功能。用队列来实现
  */
 public class RateLimiterController implements TrafficShapingController {
 
@@ -79,7 +79,7 @@ public class RateLimiterController implements TrafficShapingController {
                     }
                     // in race condition waitTime may <= 0 如果到达了这里，恭喜你，你已经通过了匀速器的考验
                     if (waitTime > 0) { // 现在需要做的就是等待该等待的时间，然后返回true，完成匀速器的使命
-                        Thread.sleep(waitTime);
+                        Thread.sleep(waitTime); // sleep ，并不真的是一个队列
                     }
                     return true;
                 } catch (InterruptedException e) {

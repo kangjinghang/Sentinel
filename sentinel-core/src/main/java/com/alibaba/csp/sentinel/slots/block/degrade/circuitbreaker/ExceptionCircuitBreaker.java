@@ -15,15 +15,15 @@
  */
 package com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker;
 
-import java.util.List;
-import java.util.concurrent.atomic.LongAdder;
-
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.context.Context;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
 import com.alibaba.csp.sentinel.slots.statistic.base.LeapArray;
 import com.alibaba.csp.sentinel.slots.statistic.base.WindowWrap;
 import com.alibaba.csp.sentinel.util.AssertUtil;
+
+import java.util.List;
+import java.util.concurrent.atomic.LongAdder;
 
 import static com.alibaba.csp.sentinel.slots.block.RuleConstant.DEGRADE_GRADE_EXCEPTION_COUNT;
 import static com.alibaba.csp.sentinel.slots.block.RuleConstant.DEGRADE_GRADE_EXCEPTION_RATIO;
@@ -68,12 +68,12 @@ public class ExceptionCircuitBreaker extends AbstractCircuitBreaker {
             return;
         }
         Throwable error = entry.getError();
-        SimpleErrorCounter counter = stat.currentWindow().value();
+        SimpleErrorCounter counter = stat.currentWindow().value(); // 滑动窗口计数器
         if (error != null) {
-            counter.getErrorCount().add(1);
+            counter.getErrorCount().add(1); // 异常+1
         }
-        counter.getTotalCount().add(1);
-
+        counter.getTotalCount().add(1); // 异常+1
+        // 状态变换
         handleStateChangeWhenThresholdExceeded(error);
     }
 
@@ -84,14 +84,14 @@ public class ExceptionCircuitBreaker extends AbstractCircuitBreaker {
         
         if (currentState.get() == State.HALF_OPEN) {
             // In detecting request
-            if (error == null) {
+            if (error == null) { // half open -> close
                 fromHalfOpenToClose();
-            } else {
+            } else {  // half open -> open
                 fromHalfOpenToOpen(1.0d);
             }
             return;
         }
-        
+        // close -> open
         List<SimpleErrorCounter> counters = stat.values();
         long errCount = 0;
         long totalCount = 0;
@@ -99,16 +99,16 @@ public class ExceptionCircuitBreaker extends AbstractCircuitBreaker {
             errCount += counter.errorCount.sum();
             totalCount += counter.totalCount.sum();
         }
-        if (totalCount < minRequestAmount) {
+        if (totalCount < minRequestAmount) { // 小于最小请求数量，样本太少
             return;
         }
         double curCount = errCount;
-        if (strategy == DEGRADE_GRADE_EXCEPTION_RATIO) {
+        if (strategy == DEGRADE_GRADE_EXCEPTION_RATIO) { // 按比例统计
             // Use errorRatio
-            curCount = errCount * 1.0d / totalCount;
+            curCount = errCount * 1.0d / totalCount; // 异常数/请求总数
         }
-        if (curCount > threshold) {
-            transformToOpen(curCount);
+        if (curCount > threshold) { // 按异常数统计
+            transformToOpen(curCount); // 变换到open状态
         }
     }
 

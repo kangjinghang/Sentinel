@@ -56,7 +56,7 @@ public class DegradeSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             }
         }
     }
-
+    // slot exit，请求结束
     @Override
     public void exit(Context context, ResourceWrapper r, int count, Object... args) {
         Entry curEntry = context.getCurEntry();
@@ -72,7 +72,7 @@ public class DegradeSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
 
         if (curEntry.getBlockError() == null) {
             // passed request
-            for (CircuitBreaker circuitBreaker : circuitBreakers) {
+            for (CircuitBreaker circuitBreaker : circuitBreakers) { // 遍历
                 circuitBreaker.onRequestComplete(context);
             }
         }

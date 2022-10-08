@@ -93,15 +93,15 @@ public class FlowRuleChecker {
             return null;
         }
 
-        if (strategy == RuleConstant.STRATEGY_RELATE) {
-            return ClusterBuilderSlot.getClusterNode(refResource);
+        if (strategy == RuleConstant.STRATEGY_RELATE) { // 关联模式
+            return ClusterBuilderSlot.getClusterNode(refResource); // 使用 ClusterNode 的统计结果来进行限流
         }
 
-        if (strategy == RuleConstant.STRATEGY_CHAIN) {
+        if (strategy == RuleConstant.STRATEGY_CHAIN) { // 链路模式
             if (!refResource.equals(context.getName())) {
                 return null;
             }
-            return node;
+            return node; // 使用 DefaultNode(当前node) 的统计结果来进行限流
         }
         // No node.
         return null;
@@ -126,9 +126,9 @@ public class FlowRuleChecker {
             // 根据调用方和上下文以及FlowRule所配置的Strategy来获取应该用于限流的统计Node
             return selectReferenceNode(rule, context, node);
         } else if (RuleConstant.LIMIT_APP_DEFAULT.equals(limitApp)) {
-            if (strategy == RuleConstant.STRATEGY_DIRECT) {
+            if (strategy == RuleConstant.STRATEGY_DIRECT) { // 直接模式
                 // Return the cluster node.
-                return node.getClusterNode();
+                return node.getClusterNode(); // 使用 ClusterNode 的统计结果来限流
             }
 
             return selectReferenceNode(rule, context, node);
@@ -148,7 +148,7 @@ public class FlowRuleChecker {
                                             boolean prioritized) {
         try {
             TokenService clusterService = pickClusterService();
-            if (clusterService == null) {
+            if (clusterService == null) {  // 如果获取不到tokenServer 的client则退回本地限流
                 return fallbackToLocalOrPass(rule, context, node, acquireCount, prioritized);
             }
             long flowId = rule.getClusterConfig().getFlowId();
@@ -160,7 +160,7 @@ public class FlowRuleChecker {
         }
         // Fallback to local flow control when token client or server for this rule is not available.
         // If fallback is not enabled, then directly pass.
-        return fallbackToLocalOrPass(rule, context, node, acquireCount, prioritized);
+        return fallbackToLocalOrPass(rule, context, node, acquireCount, prioritized); // 集群限流失效则退回本地限流
     }
 
     private static boolean fallbackToLocalOrPass(FlowRule rule, Context context, DefaultNode node, int acquireCount,

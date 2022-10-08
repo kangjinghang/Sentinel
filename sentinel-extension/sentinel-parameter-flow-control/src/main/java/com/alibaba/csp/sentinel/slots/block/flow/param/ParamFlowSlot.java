@@ -26,7 +26,7 @@ import java.util.List;
 
 /**
  * A processor slot that is responsible for flow control by frequent ("hot spot") parameters.
- *
+ * 热点参数限流，使用令牌桶算法
  * @author jialiang.linjl
  * @author Eric Zhao
  * @since 0.2.0
@@ -50,7 +50,7 @@ public class ParamFlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     public void exit(Context context, ResourceWrapper resourceWrapper, int count, Object... args) {
         fireExit(context, resourceWrapper, count, args);
     }
-
+    // 设置限流的"热点参数"的序号
     void applyRealParamIdx(/*@NonNull*/ ParamFlowRule rule, int length) {
         int paramIdx = rule.getParamIdx();
         if (paramIdx < 0) {
@@ -64,7 +64,7 @@ public class ParamFlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     }
 
     void checkFlow(ResourceWrapper resourceWrapper, int count, Object... args) throws BlockException {
-        if (args == null) {
+        if (args == null) { // 判断有没有参数传递进来，默认的 springmvc controller 是没有参数限流功能的，因为interceptor中没有传递参数进来
             return;
         }
         if (!ParamFlowRuleManager.hasRules(resourceWrapper.getName())) {
@@ -75,7 +75,7 @@ public class ParamFlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
         for (ParamFlowRule rule : rules) {
             applyRealParamIdx(rule, args.length);
 
-            // Initialize the parameter metrics.
+            // Initialize the parameter metrics. 初始化令牌桶 
             ParameterMetricStorage.initParamMetricsFor(resourceWrapper, rule);
 
             if (!ParamFlowChecker.passCheck(resourceWrapper, rule, count, args)) {
